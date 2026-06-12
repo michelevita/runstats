@@ -317,11 +317,144 @@
   }
   #ai-response.loading { color: var(--muted); font-style: italic; }
 
+  /* ── NEWS SECTION ── */
+  .news-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .news-panel-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .news-panel-header .left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .news-panel-header .left span {
+    font-family: 'DM Mono', monospace;
+    font-size: .75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  #news-summary-box {
+    padding: 20px;
+    font-size: .88rem;
+    line-height: 1.8;
+    color: var(--text);
+    min-height: 60px;
+    white-space: pre-wrap;
+  }
+  #news-summary-box.loading { color: var(--muted); font-style: italic; }
+  .news-key-row {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .news-key-row label {
+    font-family: 'DM Mono', monospace;
+    font-size: .68rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+  .news-key-row input {
+    flex: 1;
+    background: var(--dark);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: .75rem;
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .news-key-row input:focus { border-color: var(--orange); }
+  .news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .news-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 18px;
+    text-decoration: none;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: border-color .2s, transform .15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .news-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 2px;
+    background: var(--card-accent, var(--border));
+  }
+  .news-card:hover { border-color: rgba(252,76,2,.5); transform: translateY(-2px); }
+  .news-source {
+    font-family: 'DM Mono', monospace;
+    font-size: .66rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 500;
+  }
+  .news-title {
+    font-size: .88rem;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--text);
+  }
+  .news-desc {
+    font-size: .76rem;
+    color: var(--muted);
+    line-height: 1.5;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .news-date {
+    font-family: 'DM Mono', monospace;
+    font-size: .66rem;
+    color: #444;
+  }
+  .btn-refresh {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: .7rem;
+    padding: 5px 12px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: border-color .2s, color .2s;
+    white-space: nowrap;
+  }
+  .btn-refresh:hover { border-color: var(--orange); color: var(--orange); }
+
   /* ── RESPONSIVE ── */
   @media (max-width: 600px) {
     header { padding: 20px; }
     #dashboard { padding: 20px; }
     .stats-grid { grid-template-columns: 1fr 1fr; }
+    .news-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -396,6 +529,34 @@
       <button class="btn-ask" id="btn-ask" onclick="askClaude()">Perguntar</button>
     </div>
     <div id="ai-response">← Faça uma pergunta sobre seus treinos.</div>
+  </div>
+
+  <!-- NEWS SECTION -->
+  <div id="news-section" style="margin-top:48px">
+
+    <div class="section-title" id="news-section-title">NOTÍCIAS DE IA — HOJE</div>
+
+    <!-- Briefing Panel -->
+    <div class="news-panel">
+      <div class="news-panel-header">
+        <div class="left">
+          <div class="ai-dot"></div>
+          <span>Briefing Inteligente — Claude AI</span>
+        </div>
+        <button class="btn-refresh" onclick="loadDailyNews(true)">↻ Atualizar</button>
+      </div>
+      <div id="news-summary-box" class="loading">Carregando briefing...</div>
+      <div class="news-key-row" id="news-key-row">
+        <label>Claude API Key</label>
+        <input type="password" id="news-api-key" placeholder="sk-ant-api..." oninput="saveNewsKey(this.value)" autocomplete="off">
+      </div>
+    </div>
+
+    <!-- Articles Grid -->
+    <div class="news-grid" id="news-grid">
+      <div style="color:var(--muted);font-family:'DM Mono',monospace;font-size:.82rem">Buscando notícias...</div>
+    </div>
+
   </div>
 
 </div>
@@ -559,6 +720,7 @@ function renderDashboard(athlete, runs, token) {
   window._runs = runs;
   window._token = token;
   show('dashboard');
+  loadDailyNews();
 }
 
 // ── CHARTS ────────────────────────────────────────────
@@ -670,6 +832,181 @@ TOTAIS: ${runs.length} corridas, ${(runs.reduce((s,a)=>s+a.distance,0)/1000).toF
 document.getElementById('ai-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') askClaude();
 });
+
+// ── NEWS AGGREGATOR ───────────────────────────────────────────────
+const NEWS_FEEDS = [
+  { url: 'https://techcrunch.com/category/artificial-intelligence/feed/', name: 'TechCrunch AI', color: '#00c07f' },
+  { url: 'https://www.theverge.com/ai-artificial-intelligence/rss/index.xml', name: 'The Verge', color: '#fa4454' },
+  { url: 'https://feeds.hbr.org/harvardbusiness', name: 'Harvard Business Review', color: '#cc2200' },
+  { url: 'https://hnrss.org/frontpage?q=artificial+intelligence', name: 'Hacker News IA', color: '#ff6600' },
+  { url: 'https://hnrss.org/frontpage?q=finance+LLM+AI', name: 'HN Finanças', color: '#ff9900' },
+  { url: 'https://www.wired.com/feed/tag/artificial-intelligence/latest/rss', name: 'Wired AI', color: '#4db8ff' },
+];
+
+const NEWS_KEYWORDS = [
+  'ai','artificial intelligence','machine learning','llm','gpt','claude','openai','gemini',
+  'finance','investment','fintech','trading','economy','productivity','automation',
+  'workflow','deep learning','neural','chatgpt','generative','efficiency','copilot'
+];
+
+function saveNewsKey(val) {
+  const key = val.trim();
+  window._newsApiKey = key;
+  if (key) localStorage.setItem('claude_api_key', key);
+}
+
+async function rssFetch(url) {
+  const proxies = [
+    'https://api.allorigins.win/get?url=' + encodeURIComponent(url),
+    'https://corsproxy.io/?url=' + encodeURIComponent(url),
+  ];
+  for (const proxyUrl of proxies) {
+    try {
+      const r = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
+      if (!r.ok) continue;
+      const d = await r.json();
+      const text = typeof d === 'string' ? d : (d.contents || null);
+      if (text && text.trim().startsWith('<')) return text;
+    } catch(e) {}
+  }
+  return null;
+}
+
+function parseRSSItems(xmlText, feedName, feedColor) {
+  try {
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(xmlText, 'application/xml');
+    if (xml.querySelector('parsererror')) return [];
+    const items = Array.from(xml.querySelectorAll('item, entry'));
+    const results = [];
+    for (const item of items) {
+      const title = (item.querySelector('title')?.textContent || '')
+        .replace(/<!\[CDATA\[|\]\]>/g, '').trim();
+      const linkEl = item.querySelector('link');
+      const link = (linkEl?.textContent?.trim() || linkEl?.getAttribute('href') || '').trim();
+      const pubDate = item.querySelector('pubDate, published, updated')?.textContent?.trim() || '';
+      const descEl = item.querySelector('description') || item.querySelector('summary');
+      const rawDesc = (descEl?.textContent || '').replace(/<!\[CDATA\[|\]\]>/g, '').trim();
+      const desc = rawDesc.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').substring(0, 240);
+      if (!title || !link) continue;
+      const date = pubDate ? new Date(pubDate) : new Date(0);
+      if (isNaN(date.getTime())) continue;
+      const age = (Date.now() - date.getTime()) / 86400000;
+      if (age > 4) continue;
+      const text = (title + ' ' + desc).toLowerCase();
+      const score = NEWS_KEYWORDS.reduce((s, kw) => s + (text.includes(kw) ? 1 : 0), 0);
+      results.push({ title, link, date: date.getTime(), desc, source: feedName, color: feedColor, score });
+    }
+    return results;
+  } catch(e) { return []; }
+}
+
+async function fetchAllNewsFeeds() {
+  const settled = await Promise.allSettled(
+    NEWS_FEEDS.map(async feed => {
+      const xml = await rssFetch(feed.url);
+      return xml ? parseRSSItems(xml, feed.name, feed.color) : [];
+    })
+  );
+  const all = settled.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+  all.sort((a, b) => b.score !== a.score ? b.score - a.score : b.date - a.date);
+  const seen = new Set();
+  return all.filter(a => {
+    const key = a.title.toLowerCase().slice(0, 50);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, 24);
+}
+
+async function claudeNewsBriefing(articles) {
+  const apiKey = window._newsApiKey || localStorage.getItem('claude_api_key') || '';
+  if (!apiKey) return null;
+  const list = articles.slice(0, 12).map((a, i) =>
+    `${i+1}. [${a.source}] ${a.title}${a.desc ? ': ' + a.desc.slice(0, 130) : ''}`
+  ).join('\n');
+  const payload = {
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 700,
+    messages: [{ role: 'user', content: `Analise estas notícias de IA, finanças e produtividade de hoje e crie um briefing executivo em português brasileiro com:\n\n• 3-5 destaques mais importantes\n• Impacto em finanças / negócios\n• Uma dica de produtividade ou ferramenta de IA do dia\n\nNotícias:\n${list}\n\nSeja conciso e use bullet points (•).` }]
+  };
+  try {
+    const proxyUrl = 'https://api.allorigins.win/post?url=' + encodeURIComponent('https://api.anthropic.com/v1/messages');
+    const r = await fetch(proxyUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify(payload)
+    });
+    const d = await r.json();
+    const parsed = typeof d.contents === 'string' ? JSON.parse(d.contents) : d;
+    return parsed.content?.[0]?.text || null;
+  } catch(e) { return null; }
+}
+
+async function loadDailyNews(forceRefresh = false) {
+  const today = new Date().toISOString().slice(0, 10);
+  const cacheKey = 'ainews_' + today;
+  if (!forceRefresh) {
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) { renderNewsData(JSON.parse(cached)); return; }
+    } catch(e) {}
+  }
+  const summaryBox = document.getElementById('news-summary-box');
+  const grid = document.getElementById('news-grid');
+  summaryBox.className = 'loading';
+  summaryBox.textContent = 'Gerando briefing com IA...';
+  grid.innerHTML = '<div style="color:var(--muted);font-family:\'DM Mono\',monospace;font-size:.82rem">Buscando notícias de ' + NEWS_FEEDS.length + ' fontes...</div>';
+  const titleEl = document.getElementById('news-section-title');
+  if (titleEl) {
+    const fmt = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase();
+    titleEl.textContent = 'NOTÍCIAS DE IA — ' + fmt;
+  }
+  const articles = await fetchAllNewsFeeds();
+  let summary = null;
+  if (articles.length) summary = await claudeNewsBriefing(articles);
+  const data = { articles, summary, date: today };
+  try {
+    localStorage.setItem(cacheKey, JSON.stringify(data));
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('ainews_') && k < cacheKey)
+      .forEach(k => localStorage.removeItem(k));
+  } catch(e) {}
+  renderNewsData(data);
+}
+
+function renderNewsData({ articles, summary }) {
+  const summaryBox = document.getElementById('news-summary-box');
+  const grid = document.getElementById('news-grid');
+  const savedKey = localStorage.getItem('claude_api_key') || '';
+  if (savedKey) {
+    window._newsApiKey = savedKey;
+    const keyInput = document.getElementById('news-api-key');
+    if (keyInput && !keyInput.value) keyInput.value = '••••••••••••••••';
+  }
+  if (summary) {
+    summaryBox.className = '';
+    summaryBox.textContent = summary;
+  } else {
+    summaryBox.className = '';
+    summaryBox.innerHTML = '<span style="color:var(--muted);font-style:italic">Adicione sua Claude API Key abaixo para gerar o briefing inteligente do dia.</span>';
+  }
+  if (!articles || !articles.length) {
+    grid.innerHTML = '<div style="color:var(--muted);font-family:\'DM Mono\',monospace;font-size:.82rem">Nenhuma notícia encontrada. Verifique sua conexão.</div>';
+    return;
+  }
+  grid.innerHTML = articles.map(a => {
+    const date = new Date(typeof a.date === 'number' ? a.date : Number(a.date));
+    const dateStr = isNaN(date.getTime()) ? '' :
+      date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    return `<a class="news-card" href="${a.link}" target="_blank" rel="noopener noreferrer" style="--card-accent:${a.color}">
+      <div class="news-source" style="color:${a.color}">${a.source}</div>
+      <div class="news-title">${a.title}</div>
+      ${a.desc ? `<div class="news-desc">${a.desc}</div>` : ''}
+      <div class="news-date">${dateStr}</div>
+    </a>`;
+  }).join('');
+}
 
 // ── HELPERS ───────────────────────────────────────────
 function show(s) {
